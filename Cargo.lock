@@ -253,6 +253,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
+name = "bitmaps"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "031043d04099746d8db04daf1fa424b2bc8bd69d92b25962dcde24da39ab64a2"
+dependencies = [
+ "typenum",
+]
+
+[[package]]
 name = "bitvec"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1126,11 +1135,23 @@ name = "dioxus"
 version = "0.2.4"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-html",
- "dioxus-rsx",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-core-macro 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-rsx 0.0.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+]
+
+[[package]]
+name = "dioxus"
+version = "0.2.4"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-core-macro 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-rsx 0.0.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
 ]
 
 [[package]]
@@ -1151,11 +1172,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-core"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+dependencies = [
+ "bumpalo",
+ "futures-channel",
+ "futures-util",
+ "indexmap",
+ "log",
+ "longest-increasing-subsequence",
+ "rustc-hash",
+ "serde",
+ "slab",
+ "smallbox",
+]
+
+[[package]]
 name = "dioxus-core-macro"
 version = "0.2.1"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
- "dioxus-rsx",
+ "dioxus-rsx 0.0.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "dioxus-core-macro"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+dependencies = [
+ "dioxus-rsx 0.0.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
  "proc-macro2",
  "quote",
  "syn",
@@ -1167,9 +1216,34 @@ version = "0.2.3"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
  "core-foundation",
- "dioxus-core",
- "dioxus-html",
- "dioxus-interpreter-js",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-interpreter-js 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dunce",
+ "futures-channel",
+ "futures-util",
+ "infer",
+ "interprocess",
+ "log",
+ "objc",
+ "objc_id",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "webbrowser",
+ "wry",
+]
+
+[[package]]
+name = "dioxus-desktop"
+version = "0.2.3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+dependencies = [
+ "core-foundation",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-interpreter-js 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
  "dunce",
  "futures-channel",
  "futures-util",
@@ -1191,8 +1265,8 @@ name = "dioxus-heroicons"
 version = "0.1.4"
 source = "git+https://github.com/Satellite-im/dioxus-heroicons?branch=latest-dioxus#69563d817a5758274b63decaa34955bc9b3f6403"
 dependencies = [
- "dioxus",
- "dioxus-html",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
 ]
 
 [[package]]
@@ -1200,7 +1274,17 @@ name = "dioxus-hooks"
 version = "0.2.1"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "futures-channel",
+ "log",
+]
+
+[[package]]
+name = "dioxus-hooks"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
  "futures-channel",
  "log",
 ]
@@ -1211,7 +1295,22 @@ version = "0.2.1"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
  "async-trait",
- "dioxus-core",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "enumset",
+ "euclid",
+ "keyboard-types",
+ "serde",
+ "serde-value",
+ "serde_repr",
+]
+
+[[package]]
+name = "dioxus-html"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+dependencies = [
+ "async-trait",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
  "enumset",
  "euclid",
  "keyboard-types",
@@ -1226,11 +1325,16 @@ version = "0.2.1"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 
 [[package]]
+name = "dioxus-interpreter-js"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+
+[[package]]
 name = "dioxus-router"
 version = "0.2.3"
-source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
- "dioxus",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
  "futures-channel",
  "futures-util",
  "log",
@@ -1245,6 +1349,17 @@ dependencies = [
 name = "dioxus-rsx"
 version = "0.0.1"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn",
+]
+
+[[package]]
+name = "dioxus-rsx"
+version = "0.0.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1443,6 +1558,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a407cfaa3385c4ae6b23e84623d48c2798d06e3e6a1878f7f59f17b3f86499"
 dependencies = [
  "instant",
+]
+
+[[package]]
+name = "fermi"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "im-rc",
+ "log",
 ]
 
 [[package]]
@@ -2409,6 +2534,21 @@ dependencies = [
  "thread_local",
  "walkdir",
  "winapi-util",
+]
+
+[[package]]
+name = "im-rc"
+version = "15.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af1955a75fa080c677d3972822ec4bad316169ab1cfc6c257a942c2265dbe5fe"
+dependencies = [
+ "bitmaps",
+ "rand_core 0.6.4",
+ "rand_xoshiro",
+ "serde",
+ "sized-chunks",
+ "typenum",
+ "version_check",
 ]
 
 [[package]]
@@ -3498,9 +3638,9 @@ checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 name = "playground"
 version = "0.1.0"
 dependencies = [
- "dioxus",
- "dioxus-core",
- "dioxus-desktop",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-desktop 0.2.3 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "ui-kit",
 ]
 
@@ -3717,6 +3857,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16abd0c1b639e9eb4d7c50c0b8100b0d0f849be2349829c740fe8e6eb4816429"
 dependencies = [
  "rand_core 0.5.1",
+]
+
+[[package]]
+name = "rand_xoshiro"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f97cdb2a36ed4183de61b2f824cc45c9f1037f28afe0a322e9fff4c108b5aaa"
+dependencies = [
+ "rand_core 0.6.4",
 ]
 
 [[package]]
@@ -4204,6 +4353,16 @@ name = "siphasher"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7bd3e3206899af3f8b12af284fafc038cc1dc2b41d1b89dd17297221c5d225de"
+
+[[package]]
+name = "sized-chunks"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16d69225bde7a69b235da73377861095455d298f2b970996eec25ddbb42b3d1e"
+dependencies = [
+ "bitmaps",
+ "typenum",
+]
 
 [[package]]
 name = "slab"
@@ -4844,11 +5003,11 @@ checksum = "9e79c4d996edb816c91e4308506774452e55e95c3c9de07b6729e17e15a5ef81"
 name = "ui-kit"
 version = "0.1.0"
 dependencies = [
- "dioxus",
- "dioxus-core",
- "dioxus-desktop",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-desktop 0.2.3 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
  "dioxus-heroicons",
- "dioxus-hooks",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
  "glob",
  "humansize",
  "rsass",
@@ -4961,12 +5120,13 @@ dependencies = [
  "base64 0.20.0",
  "chrono",
  "cocoa",
- "dioxus",
- "dioxus-desktop",
- "dioxus-hooks",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-desktop 0.2.3 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
  "dioxus-router",
  "dirs",
  "either",
+ "fermi",
  "fluent-templates",
  "glob",
  "image",
