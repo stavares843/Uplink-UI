@@ -26,8 +26,8 @@ pub struct Props<'a> {
     with_replying_to: Option<Element<'a>>,
     #[props(optional)]
     with_file_upload: Option<Element<'a>>,
-    #[props(optional)]
-    extensions: Option<Element<'a>>,
+    // #[props(optional)]
+    // extensions: Option<Element<'a>>,
     #[props(optional)]
     controls: Option<Element<'a>>,
 }
@@ -83,7 +83,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 // TODO: This should come from props
                 placeholder: "Say something...".into(),
             },
-            *&cx.props.extensions.as_ref().unwrap(),
+            //*&cx.props.extensions.as_ref().unwrap(),
             div {
                 class: "controls",
                 *&cx.props.controls.as_ref().unwrap()

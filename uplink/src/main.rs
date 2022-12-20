@@ -116,6 +116,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
+    use_init_atom_root(cx);
     /*let state = match State::load() {
         Ok(s) => s,
         Err(_) => State::default(),

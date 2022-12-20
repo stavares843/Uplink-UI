@@ -1263,10 +1263,10 @@ dependencies = [
 [[package]]
 name = "dioxus-heroicons"
 version = "0.1.4"
-source = "git+https://github.com/Satellite-im/dioxus-heroicons?branch=latest-dioxus#69563d817a5758274b63decaa34955bc9b3f6403"
+source = "git+https://github.com/Satellite-im/dioxus-heroicons?branch=dioxus-master#9aca39947c2b3650511d900d38bc38023738c7f2"
 dependencies = [
- "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
- "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?rev=651ab3e7e393f22f7aee0428bdc63cffcb1e0239)",
 ]
 
 [[package]]
