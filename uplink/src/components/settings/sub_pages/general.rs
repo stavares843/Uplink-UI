@@ -3,7 +3,7 @@ use fermi::use_atom_ref;
 use fluent_templates::Loader;
 use ui_kit::{elements::{switch::Switch, select::Select }};
 
-use crate::{components::settings::SettingSection, utils::language::{change_language, get_available_languages, APP_LANG}, state::{State, Action}, LOCALES, STATE};
+use crate::{components::settings::SettingSection, utils::language::{change_language, get_available_languages, APP_LANG}, state::Action, LOCALES, STATE};
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {    

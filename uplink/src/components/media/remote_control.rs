@@ -10,7 +10,7 @@ use ui_kit::{
     icons::Icon,
 };
 
-use crate::state::{Action, State};
+use crate::state::Action;
 use crate::STATE;
 
 #[allow(non_snake_case)]

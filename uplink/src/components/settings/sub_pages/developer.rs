@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use fermi::use_atom_ref;
 use ui_kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
 
-use crate::{components::settings::SettingSection, state::State, STATE};
+use crate::{components::settings::SettingSection, STATE};
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {

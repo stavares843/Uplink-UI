@@ -1,4 +1,4 @@
-use crate::state::{Action, State};
+use crate::state::Action;
 use crate::STATE;
 use dioxus::prelude::*;
 use dioxus_router::*;

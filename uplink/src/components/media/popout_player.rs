@@ -9,7 +9,7 @@ use ui_kit::{
     icons::{Icon, IconElement},
 };
 
-use crate::state::{State, Action};
+use crate::state::Action;
 use crate::STATE;
 
 pub const SCRIPT: &str = include_str!("./script.js");

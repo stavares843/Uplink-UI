@@ -1,5 +1,4 @@
 use std::fs;
-use std::sync::RwLock;
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;

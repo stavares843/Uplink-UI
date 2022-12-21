@@ -14,7 +14,6 @@ use crate::{
             friend::{BlockedUsers, Friends, OutgoingRequests, PendingFriends},
         },
     },
-    state::State,
     APP_LANG, LOCALES, STATE,
 };
 

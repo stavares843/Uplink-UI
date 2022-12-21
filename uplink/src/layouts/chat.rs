@@ -5,7 +5,6 @@ use crate::{
     components::chat::{
         compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
     },
-    state::State,
     STATE,
 };
 

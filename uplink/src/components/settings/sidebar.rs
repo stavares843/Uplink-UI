@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{components::chat::RouteInfo, state::State, APP_LANG, LOCALES, STATE};
+use crate::{components::chat::RouteInfo, APP_LANG, LOCALES, STATE};
 use dioxus::prelude::*;
 use dioxus_router::*;
 use fermi::use_atom_ref;

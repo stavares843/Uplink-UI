@@ -1,5 +1,5 @@
 [workspace]
-members = ["./ui_kit", "./playground", "./uplink"]
+members = ["./ui_kit", "./uplink"]
 
 [profile.rapid]
 inherits = "dev"
