@@ -6,7 +6,7 @@ asdsad
 <h4 align="center">Privacy First, Modular, P2P messaging client built atop Warssssssp.</h4>sadasdsadaadsasdasdas
 
 <br/>
-asdadasdsadadad
+
 
 The goal should be to build a hyper-customizable application that can run anywhere and support extensions.
 asadadada
