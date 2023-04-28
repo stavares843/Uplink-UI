@@ -1,12 +1,8 @@
-name: shipit
+name: Update PR's with latest dev
 on:
-  # This will trigger on all pushes to all branches.
-  push: {}
-  # Alternatively, you can only trigger if commits are pushed to certain branches, e.g.:
-  # push:
-  #   branches:
-  #     - master
-  #     - unstable
+   push:
+     branches:
+        - dev
 jobs:
   shipit:
     name: shipit
