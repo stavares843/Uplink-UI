@@ -18,7 +18,6 @@ jobs:
 
       - name: Update PRs
         run: |
-          git fetch origin dev
           git checkout dev
           git pull origin dev
 
@@ -34,8 +33,8 @@ jobs:
             for PR_NUMBER in $PR_LIST; do
               curl -X PATCH -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                 -H "Accept: application/vnd.github.v3+json" \
-                -d '{"title":"Update from dev branch","body":"This pull request has been updated with the latest changes from the dev branch.","commit_title":"Update from dev branch","commit_message":"Update from dev branch"}' \
-                https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER/update-branch
+                -d '{"title":"Update from dev branch","body":"This pull request has been updated with the latest changes from the dev branch.","merge_method":"merge"}' \
+                https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER
             done
           else
             echo "No changes found in the dev branch. Skipping PR update."
