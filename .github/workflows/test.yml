@@ -1,0 +1,13 @@
+name: autoupdater
+on: push
+jobs:
+  autoupdate:
+    name: autoupdate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: PR Auto Updater
+        uses: grmoon/autoupdater@0.0.2
+        env:
+          # Required
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
