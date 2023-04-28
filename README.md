@@ -67,7 +67,7 @@ asdadadaddasda
 | libsoup-dev | `sudo apt install libsoup-3.0-dev` |
 | protobuf| `sudo apt-get install protobuf-compiler` |
 | Tauri Deps | `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
-| ffmpeg| `sudo apt-get install ffmpeg` |
+| ffmpeg| `sudo apt-get install ffmpseeeeeeg` |
 
 ## Contributing
 
