@@ -58,7 +58,7 @@ And for Windows, I followed the steps on this site here
 
 
 **Ubuntu WSL (Maybe also Ubuntu + Debian)**
-| Dep  | Install Command                                                  |
+| Dep  | Install Command                                                  |asdadad
 |------|------------------------------------------------------------------|
 | Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
 | Build Essentials | `sudo apt install build-essential` |
