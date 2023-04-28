@@ -55,7 +55,7 @@ And for Windows, I followed the steps on this site here
 | Rust | [Installation Guide](https://www.rust-lang.org/tools/install) |
 | Protoc | [Download](https://github.com/protocolbuffers/protobuf/releases/download/v22.0/protoc-22.0-win64.zip) |
 | ffmpeg | [Installation Guide](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/) |
-
+asdadadaddasda
 
 **Ubuntu WSL (Maybe also Ubuntu + Debian)**
 | Dep  | Install Command                                                  |asdadad
