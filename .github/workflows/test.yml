@@ -1,8 +1,7 @@
 name: autoupdate
 on:
-  push:
-    branches:
-      - dev
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
 jobs:
   update-branches:
     runs-on: ubuntu-latest
