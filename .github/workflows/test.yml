@@ -1,13 +1,17 @@
-name: autoupdater
-on: push
+name: autoupdate
+on:
+  # This will trigger on all pushes to all branches.
+  push: {}
+  # Alternatively, you can only trigger if commits are pushed to certain branches, e.g.:
+  # push:
+  #   branches:
+  #     - master
+  #     - unstable
 jobs:
   autoupdate:
     name: autoupdate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-      - name: PR Auto Updater
-        uses: grmoon/autoupdater@0.0.2
+      - uses: docker://chinthakagodawita/autoupdate-action:v1
         env:
-          # Required
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
