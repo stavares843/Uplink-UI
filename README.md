@@ -60,7 +60,7 @@ And for Windows, I followed the steps on this site here
 **Ubuntu WSL (Maybe also Ubuntu + Debian)**
 | Dep  | Install Command                                                  |asdadad
 |------|------------------------------------------------------------------|
-| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
+| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |<zx<x<zadasd
 | Build Essentials | `sudo apt install build-essential` |
 | pkg-config | `sudo apt-get install pkg-config` |
 | alsa-sys | `sudo apt install librust-alsa-sys-dev` |
