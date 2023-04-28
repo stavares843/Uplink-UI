@@ -16,6 +16,13 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt install gh
+
       - name: Update PRs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -27,15 +34,11 @@ jobs:
 
           # If there are changes, update the pull requests
           if [[ -n "$CHANGED_FILES" ]]; then
-            PR_LIST=$(curl -s -H "Authorization: Bearer ${{ env.GITHUB_TOKEN }}" \
-                https://api.github.com/repos/stavares843/Uplink-UI/pulls\?state\=open\&head\=stavares843/Uplink-UI:dev | jq -r '.[].number')
+            PR_LIST=$(gh pr list --state open --base dev --json number -q '.[].number')
 
             # Update each open pull request with a custom commit message
             for PR_NUMBER in $PR_LIST; do
-              curl -X PATCH -H "Authorization: Bearer ${{ env.GITHUB_TOKEN }}" \
-                -H "Accept: application/vnd.github.v3+json" \
-                -d '{"title":"Update from dev branch","body":"This pull request has been updated with the latest changes from the dev branch.","merge_method":"merge"}' \
-                https://api.github.com/repos/stavares843/Uplink-UI/pulls/$PR_NUMBER
+              gh pr merge $PR_NUMBER --merge --title "Update from dev branch" --body "This pull request has been updated with the latest changes from the dev branch."
             done
           else
             echo "No changes found in the dev branch. Skipping PR update."
