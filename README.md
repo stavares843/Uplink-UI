@@ -3,7 +3,7 @@
   Uplink
 </h1>
 asdsad
-<h4 align="center">Privacy First, Modular, P2P messaging client built atop Warp.</h4>sadasdsadaadsasdasdas
+<h4 align="center">Privacy First, Modular, P2P messaging client built atop Warssssssp.</h4>sadasdsadaadsasdasdas
 
 <br/>
 asdadasdsadadad

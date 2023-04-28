@@ -17,24 +17,23 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Update PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git checkout dev
-          git pull origin dev
-
           # Check if there are any changes in the dev branch
           CHANGED_FILES=$(git diff --name-only origin/dev)
 
           # If there are changes, update the pull requests
           if [[ -n "$CHANGED_FILES" ]]; then
-            PR_LIST=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                https://api.github.com/repos/${{ github.repository }}/pulls\?state\=open\&head\=${{ github.repository }}:dev | jq -r '.[].number')
+            PR_LIST=$(curl -s -H "Authorization: Bearer ${{ env.GITHUB_TOKEN }}" \
+                https://api.github.com/repos/stavares843/Uplink-UI/pulls\?state\=open\&head\=stavares843/Uplink-UI:dev | jq -r '.[].number')
 
             # Update each open pull request with a custom commit message
             for PR_NUMBER in $PR_LIST; do
-              curl -X PATCH -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              curl -X PATCH -H "Authorization: Bearer ${{ env.GITHUB_TOKEN }}" \
                 -H "Accept: application/vnd.github.v3+json" \
                 -d '{"title":"Update from dev branch","body":"This pull request has been updated with the latest changes from the dev branch.","merge_method":"merge"}' \
-                https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER
+                https://api.github.com/repos/stavares843/Uplink-UI/pulls/$PR_NUMBER
             done
           else
             echo "No changes found in the dev branch. Skipping PR update."
