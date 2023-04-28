@@ -8,10 +8,14 @@ on:
   #     - master
   #     - unstable
 jobs:
-  autoupdate:
-    name: autoupdate
-    runs-on: ubuntu-22.04
+  update-branches:
+    runs-on: ubuntu-latest
     steps:
-      - uses: docker://chinthakagodawita/autoupdate-action:v1
-        env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Update branches
+        uses: brainly/action-autoupdate-branch@2.0.0
+        id: autoUpdateBranch
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          requiredApprovals: 0 #Number of required approvals before branch should be updated
