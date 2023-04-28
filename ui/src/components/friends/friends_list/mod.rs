@@ -37,7 +37,7 @@ enum ChanCmd {
 
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
+    let state = use_shared_state::<State>(cx)?;
     let friends_list = HashMap::from_iter(
         state
             .read()
@@ -254,6 +254,8 @@ pub fn Friends(cx: Scope) -> Element {
                                         suffix: did_suffix,
                                         status_message: friend.status_message().unwrap_or_default(),
                                         relationship: relationship,
+                                        block_button_disabled: block_in_progress.current().contains(&friend.did_key()),
+                                        remove_button_disabled: remove_in_progress.current().contains(&friend.did_key()),
                                         user_image: cx.render(rsx! (
                                             UserImage {
                                                 platform: platform,

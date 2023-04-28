@@ -64,7 +64,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
 
-    let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
+    let files_to_upload = &cx.props.upload_files;
+    let update_send = move || {
+        let valid = state.read().active_chat_has_draft() || !files_to_upload.is_empty();
+        if !can_send.get().eq(&valid) {
+            can_send.set(valid);
+        }
+    };
+    update_send();
+
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
     let my_id = state.read().did_key();
@@ -85,41 +93,38 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let msg_ch = use_coroutine(
         cx,
         |mut rx: UnboundedReceiver<(Vec<String>, Uuid, Option<Uuid>)>| {
-            to_owned![files_to_upload];
+            to_owned![files_to_upload, state];
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                 while let Some((msg, conv_id, reply)) = rx.next().await {
                     let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                    let attachments = files_to_upload.current().to_vec();
                     let cmd = match reply {
-                        Some(reply_to) => {
-                            let attachments = files_to_upload.current().to_vec();
-                            RayGunCmd::Reply {
-                                conv_id,
-                                reply_to,
-                                msg,
-                                attachments,
-                                rsp: tx,
-                            }
-                        }
-                        None => {
-                            let attachments = files_to_upload.current().to_vec();
-                            RayGunCmd::SendMessage {
-                                conv_id,
-                                msg,
-                                attachments,
-                                rsp: tx,
-                            }
-                        }
+                        Some(reply_to) => RayGunCmd::Reply {
+                            conv_id,
+                            reply_to,
+                            msg,
+                            attachments,
+                            rsp: tx,
+                        },
+                        None => RayGunCmd::SendMessage {
+                            conv_id,
+                            msg,
+                            attachments,
+                            rsp: tx,
+                        },
                     };
                     files_to_upload.set(vec![]);
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                         log::error!("failed to send warp command: {}", e);
+                        state.write().decrement_outgoing_messages(conv_id);
                         continue;
                     }
 
                     let rsp = rx.await.expect("command canceled");
                     if let Err(e) = rsp {
                         log::error!("failed to send message: {}", e);
+                        state.write().decrement_outgoing_messages(conv_id);
                     }
                 }
             }
@@ -214,7 +219,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
     let msg_valid = |msg: &[String]| {
         (!msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty()))
-            || !files_to_upload.current().is_empty()
+            || !cx.props.upload_files.current().is_empty()
     };
 
     let submit_fn = move || {
@@ -251,6 +256,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(id));
             }
+            state.write().increment_outgoing_messages();
             msg_ch.send((msg, id, replying_to));
         }
     };
@@ -269,24 +275,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
     let disabled = !state.read().can_use_active_chat();
 
-    let inner_state = state.inner();
-
     let chatbar = cx.render(rsx!(Chatbar {
         key: "{id}",
         id: id.to_string(),
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         is_disabled: disabled,
-        tooltip: get_local_text("messages.not-friends"),
+        ignore_focus: cx.props.ignore_focus,
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
-                match inner_state.try_borrow_mut() {
-                    Ok(state) => {
-                        can_send.set(!v.is_empty() || !files_to_upload.get().is_empty());
-                        state.write().mutate(Action::SetChatDraft(*id, v));
-                    }
-                    Err(e) => log::error!("{e}"),
-                };
+                state.write_silent().mutate(Action::SetChatDraft(*id, v));
+                update_send();
                 local_typing_ch.send(TypingIndicator::Typing(*id));
             }
         },
@@ -367,15 +366,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     .set_directory(dirs::home_dir().unwrap_or_default())
                     .pick_files()
                 {
-                    let mut new_files_to_upload: Vec<_> = files_to_upload
+                    let mut new_files_to_upload: Vec<_> = cx
+                        .props
+                        .upload_files
                         .current()
                         .iter()
                         .filter(|file_name| !new_files.contains(file_name))
                         .cloned()
                         .collect();
                     new_files_to_upload.extend(new_files);
-                    files_to_upload.set(new_files_to_upload);
-                    can_send.set(true);
+                    cx.props.upload_files.set(new_files_to_upload);
+                    update_send();
                 }
             },
             tooltip: cx.render(rsx!(Tooltip {
@@ -408,10 +409,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             })
         })
         chatbar,
-        Attachments {files: files_to_upload.clone(), on_remove: move |b| {
-            can_send.set(b | state
-                .read()
-                .active_chat_has_draft());
+        Attachments {files: cx.props.upload_files.clone(), on_remove: move |_| {
+            update_send();
         }}
     ))
 }
@@ -419,7 +418,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 #[derive(Props)]
 pub struct AttachmentProps<'a> {
     files: UseState<Vec<PathBuf>>,
-    on_remove: EventHandler<'a, bool>,
+    on_remove: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
@@ -445,7 +444,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         });
                         b = !files.is_empty();
                     });
-                    cx.props.on_remove.call(b);
+                    cx.props.on_remove.call(());
                 },
             })
         })));

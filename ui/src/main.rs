@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+#![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
 use chrono::{Datelike, Local, Timelike};
@@ -6,9 +6,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::{
-    get_extras_dir, state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH,
-};
+use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -26,13 +24,12 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
-use uuid::Uuid;
 use warp::multipass;
 
 use std::sync::Arc;
@@ -62,8 +59,8 @@ use crate::utils::auto_updater::{
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
-    state::{friends, storage, ui::WindowMeta, Action, State},
-    warp_runner::{ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd},
+    state::{storage, ui::WindowMeta, Action, State},
+    warp_runner::{ConstellationCmd, RayGunCmd, WarpCmd},
 };
 use dioxus_router::*;
 use std::panic;
@@ -188,32 +185,37 @@ fn main() {
     std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
     std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 
-    let window = get_window_builder(true);
+    let window = get_window_builder(true, true);
 
-    let config = Config::default();
+    let config = Config::new()
+        .with_window(window)
+        .with_custom_index(
+            r#"
+<!doctype html>
+<html>
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+</html>"#
+                .to_string(),
+        )
+        .with_file_drop_handler(|_w, drag_event| {
+            log::info!("Drag Event: {:?}", drag_event);
+            *DRAG_EVENT.write() = drag_event;
+            true
+        });
 
-    dioxus_desktop::launch_cfg(
-        bootstrap,
+    let config = if cfg!(target_os = "windows") && STATIC_ARGS.production_mode {
+        let webview_data_dir = STATIC_ARGS.dot_uplink.join("tmp");
+        std::fs::create_dir_all(&webview_data_dir).expect("error creating webview data directory");
+        config.with_data_directory(webview_data_dir)
+    } else {
         config
-            .with_window(window)
-            .with_custom_index(
-                r#"
-    <!doctype html>
-    <html>
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
-    </html>"#
-                    .to_string(),
-            )
-            .with_file_drop_handler(|_w, drag_event| {
-                log::info!("Drag Event: {:?}", drag_event);
-                *DRAG_EVENT.write() = drag_event;
-                true
-            }),
-    )
+    };
+
+    dioxus_desktop::launch_cfg(bootstrap, config)
 }
 
-pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
+pub fn get_window_builder(with_predefined_size: bool, with_menu: bool) -> WindowBuilder {
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
     let mut edit_menu = Menu::new();
@@ -260,6 +262,13 @@ pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
         window = window.with_inner_size(LogicalSize::new(950.0, 600.0));
     }
 
+    if with_menu {
+        #[cfg(target_os = "macos")]
+        {
+            window = window.with_menu(main_menu)
+        }
+    }
+
     #[cfg(target_os = "macos")]
     {
         use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
@@ -268,10 +277,9 @@ pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
             .with_has_shadow(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
-            .with_menu(main_menu)
             .with_titlebar_transparent(true)
             .with_title("")
-        // .with_movable_by_window_background(true)
+            .with_movable_by_window_background(true)
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -330,7 +338,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
         div {
             id: "app-wrap",
             div {
-                class: "titlebar",
+                class: "titlebar disable-select",
                 id: if cfg!(target_os = "macos") {""}  else {"lockscreen-controls"},
                 onmousedown: move |_| { desktop.drag(); },
                 Topbar_Controls {},
@@ -392,8 +400,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     let mut state = State::load();
 
     if STATIC_ARGS.use_mock {
-        assert!(state.friends().initialized);
-        assert!(state.chats().initialized);
+        assert!(state.initialized);
     } else {
         state.set_own_identity(identity.clone().into());
     }
@@ -441,12 +448,8 @@ fn app(cx: Scope) -> Element {
         prism_path.to_string_lossy()
     );
 
-    // don't fetch friends and conversations from warp when using mock data
-    let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
+    // don't fetch stuff from warp when using mock data
     let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
-    let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
-    let state_init = use_ref(cx, || STATIC_ARGS.use_mock);
-    let needs_update = use_state(cx, || false);
 
     let mut font_style = String::new();
     if let Some(font) = state.read().ui.font.clone() {
@@ -505,19 +508,16 @@ fn app(cx: Scope) -> Element {
     // use_coroutine for software update
 
     // updates the UI
-    let inner = download_state.inner();
     let updater_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
-        to_owned![needs_update];
+        to_owned![download_state];
         async move {
             while let Some(mut ch) = rx.next().await {
                 while let Some(percent) = ch.0.recv().await {
-                    if percent >= inner.borrow().read().progress + 5_f32 {
-                        inner.borrow_mut().write().progress = percent;
-                        needs_update.set(true);
+                    if percent >= download_state.read().progress + 5_f32 {
+                        download_state.write().progress = percent;
                     }
                 }
-                inner.borrow_mut().write().stage = DownloadProgress::Finished;
-                needs_update.set(true);
+                download_state.write().stage = DownloadProgress::Finished;
             }
         }
     });
@@ -563,53 +563,32 @@ fn app(cx: Scope) -> Element {
     //     not loaded from Warp. however, warp_runner continues to operate normally.
     //
 
-    // yes, double render. sry.
-    if *needs_update.get() {
-        needs_update.set(false);
-        state.write();
-    }
-
     // There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
     let webview = desktop.webview.clone();
-    let inner = state.inner();
     use_wry_event_handler(cx, {
-        to_owned![needs_update, desktop];
+        to_owned![state, desktop];
         move |event, _| match event {
             WryEvent::WindowEvent {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
                 //log::trace!("FOCUS CHANGED {:?}", *focused);
-                if inner.borrow().read().ui.metadata.focused != *focused {
-                    match inner.try_borrow_mut() {
-                        Ok(state) => {
-                            state.write().ui.metadata.focused = *focused;
+                if state.read().ui.metadata.focused != *focused {
+                    state.write().ui.metadata.focused = *focused;
 
-                            if *focused {
-                                state.write().ui.notifications.clear_badge();
-                                let _ = state.write().save();
-                            }
-                            //crate::utils::sounds::Play(Sounds::Notification);
-                            //needs_update.set(true);
-                        }
-                        Err(e) => {
-                            log::error!("{e}");
-                        }
+                    if *focused {
+                        state.write().ui.notifications.clear_badge();
+                        let _ = state.write().save();
                     }
                 }
             }
             WryEvent::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
-            } => match inner.try_borrow_mut() {
-                Ok(state) => {
-                    state
-                        .write()
-                        .mutate(Action::ClearAllPopoutWindows(desktop.clone()));
-                }
-                Err(e) => log::error!("{e}"),
-            },
+            } => state
+                .write()
+                .mutate(Action::ClearAllPopoutWindows(desktop.clone())),
             WryEvent::WindowEvent {
                 event: WindowEvent::Resized(_),
                 ..
@@ -621,22 +600,14 @@ fn app(cx: Scope) -> Element {
                 //    size.width < 1200
                 //);
 
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        let metadata = state.read().ui.metadata.clone();
-                        let new_metadata = WindowMeta {
-                            minimal_view: size.width < 600,
-                            ..metadata
-                        };
-                        if metadata != new_metadata {
-                            state.write().ui.sidebar_hidden = new_metadata.minimal_view;
-                            state.write().ui.metadata = new_metadata;
-                            needs_update.set(true);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
+                let metadata = state.read().ui.metadata.clone();
+                let new_metadata = WindowMeta {
+                    minimal_view: size.width < 600,
+                    ..metadata
+                };
+                if metadata != new_metadata {
+                    state.write().ui.sidebar_hidden = new_metadata.minimal_view;
+                    state.write().ui.metadata = new_metadata;
                 }
             }
             _ => {}
@@ -644,12 +615,11 @@ fn app(cx: Scope) -> Element {
     });
 
     // update state in response to warp events
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update, friends_init, chats_init];
+        to_owned![state];
         async move {
             // don't process warp events until friends and chats have been loaded
-            while !(*friends_init.read() && *chats_init.read()) {
+            while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
@@ -658,81 +628,51 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().process_warp_event(evt);
-                        needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
-                }
+                state.write().process_warp_event(evt);
             }
         }
     });
 
     // clear toasts
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update];
+        to_owned![state];
         async move {
             loop {
                 sleep(Duration::from_secs(1)).await;
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        if !state.read().has_toasts() {
-                            continue;
-                        }
-                        if state.write().decrement_toasts() {
-                            needs_update.set(true);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
+                if !state.read().has_toasts() {
+                    continue;
                 }
+                state.write().decrement_toasts();
             }
         }
     });
 
     // clear typing indicator
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update];
+        to_owned![state];
         async move {
             loop {
                 sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        let now = Instant::now();
-                        if state.write().clear_typing_indicator(now) {
-                            needs_update.set(true);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
-                }
+                state.write().clear_typing_indicator(Instant::now());
             }
         }
     });
 
     // periodically refresh message timestamps and friend's status messages
     use_future(cx, (), |_| {
-        to_owned![needs_update];
+        to_owned![state];
         async move {
             loop {
                 // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
-                needs_update.set(true);
+                state.write();
             }
         }
     });
 
     // check for updates
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update];
+        to_owned![state];
         async move {
             loop {
                 let latest_release = match utils::auto_updater::check_for_release().await {
@@ -749,56 +689,36 @@ fn app(cx: Scope) -> Element {
                         continue;
                     }
                 };
-                if inner.borrow().read().settings.update_dismissed
-                    == Some(latest_release.tag_name.clone())
-                {
+                if state.read().settings.update_dismissed == Some(latest_release.tag_name.clone()) {
                     sleep(Duration::from_secs(3600 * 24)).await;
                     continue;
                 }
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().update_available(latest_release.tag_name);
-                        needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
-                }
+                state.write().update_available(latest_release.tag_name);
                 sleep(Duration::from_secs(3600 * 24)).await;
             }
         }
     });
 
     // control child windows
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update, desktop];
+        to_owned![desktop, state];
         async move {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
             let mut ch = window_cmd_rx.lock().await;
             while let Some(cmd) = ch.recv().await {
-                window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
-                needs_update.set(true);
+                window_manager::handle_cmd(state.clone(), cmd, desktop.clone()).await;
             }
         }
     });
 
-    // init extensions
-    let inner = state.inner();
+    // init state from warp
+    // also init extensions
     use_future(cx, (), |_| {
-        to_owned![state_init, needs_update];
+        to_owned![state];
         async move {
-            if *state_init.read() {
+            if state.read().initialized {
                 return;
             }
-
-            let state = match inner.try_borrow_mut() {
-                Ok(state) => state,
-                Err(e) => {
-                    log::error!("{e}");
-                    return;
-                }
-            };
 
             // this is technically bad because it blocks the async runtime
             match get_extensions() {
@@ -816,61 +736,40 @@ fn app(cx: Scope) -> Element {
                 state.read().ui.extensions.values().count()
             );
 
-            state_init.set(true);
-            needs_update.set(true);
-        }
-    });
-
-    // initialize friends
-    let inner = state.inner();
-    use_future(cx, (), |_| {
-        to_owned![friends_init, needs_update];
-        async move {
-            if *friends_init.read() {
-                return;
-            }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) = oneshot::channel::<
-                Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
-            >();
-            if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
-                rsp: tx,
-            })) {
-                log::error!("failed to initialize Friends {}", e);
-                tokio::time::sleep(Duration::from_secs(1)).await;
-                return;
-            }
-
-            let res = rx.await.expect("failed to get response from warp_runner");
-
-            log::trace!("init friends");
-            let friends = match res {
-                Ok(friends) => friends,
-                Err(e) => {
-                    log::error!("init friends failed: {}", e);
-                    return;
+            let res = loop {
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeWarp { rsp: tx }))
+                {
+                    log::error!("failed to send command to initialize warp {}", e);
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                    continue;
                 }
+
+                let res = rx.await.expect("failed to get response from warp_runner");
+
+                let res = match res {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("failed to initialize warp: {}", e);
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+                        continue;
+                    }
+                };
+
+                break res;
             };
 
-            match inner.try_borrow_mut() {
-                Ok(state) => {
-                    state.write().set_friends(friends.0, friends.1);
-                    needs_update.set(true);
-                }
-                Err(e) => {
-                    log::error!("{e}");
-                }
-            }
-
-            *friends_init.write_silent() = true;
-            needs_update.set(true);
+            state
+                .write()
+                .init_warp(res.friends, res.chats, res.converted_identities);
         }
     });
 
     // initialize files
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![items_init, needs_update];
+        to_owned![items_init, state];
         async move {
             if *items_init.read() {
                 return;
@@ -889,133 +788,61 @@ fn app(cx: Scope) -> Element {
 
             log::trace!("init items");
             match res {
-                Ok(storage) => match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().storage = storage;
-
-                        needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
-                },
+                Ok(storage) => state.write().storage = storage,
                 Err(e) => {
                     log::error!("init items failed: {}", e);
                 }
             }
 
-            *items_init.write_silent() = true;
-            needs_update.set(true);
+            *items_init.write() = true;
         }
     });
 
-    // initialize conversations
-    let inner = state.inner();
+    // detect when new extensions are placed in the "extensions" folder, and load them.
     use_future(cx, (), |_| {
-        to_owned![chats_init, needs_update];
+        to_owned![state];
         async move {
-            if *chats_init.read() {
-                return;
-            }
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let res = loop {
-                let (tx, rx) = oneshot::channel::<
-                    Result<
-                        (HashMap<Uuid, state::Chat>, HashSet<state::Identity>),
-                        warp::error::Error,
-                    >,
-                >();
-                if let Err(e) =
-                    warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
-                        rsp: tx,
-                    }))
-                {
-                    log::error!("failed to init RayGun: {}", e);
-                    tokio::time::sleep(Duration::from_secs(1)).await;
-                    continue;
-                }
-
-                match rx.await {
-                    Ok(r) => break r,
-                    Err(e) => {
-                        log::error!("command canceled: {}", e);
-                        tokio::time::sleep(std::time::Duration::from_secs(1)).await
-                    }
-                }
-            };
-
-            log::trace!("init chats");
-            let chats = match res {
-                Ok(r) => r,
+            let (tx, mut rx) = futures::channel::mpsc::unbounded();
+            let mut watcher = match RecommendedWatcher::new(
+                move |res| {
+                    let _ = tx.unbounded_send(res);
+                },
+                notify::Config::default().with_poll_interval(Duration::from_secs(1)),
+            ) {
+                Ok(watcher) => watcher,
                 Err(e) => {
-                    log::error!("failed to initialize chats: {}", e);
+                    log::error!("{e}");
                     return;
                 }
             };
 
-            match inner.try_borrow_mut() {
-                Ok(state) => {
-                    state.write().set_chats(chats.0, chats.1);
-                    needs_update.set(true);
-                }
-                Err(e) => {
-                    log::error!("{e}");
-                }
-            }
-
-            *chats_init.write_silent() = true;
-            needs_update.set(true);
-        }
-    });
-
-    // Automatically select the best implementation for your platform.
-    let inner = state.inner();
-    use_future(cx, (), |_| async move {
-        let (tx, mut rx) = futures::channel::mpsc::unbounded();
-        let mut watcher = match RecommendedWatcher::new(
-            move |res| {
-                let _ = tx.unbounded_send(res);
-            },
-            notify::Config::default().with_poll_interval(Duration::from_secs(1)),
-        ) {
-            Ok(watcher) => watcher,
-            Err(e) => {
+            // Add a path to be watched. All files and directories at that path and
+            // below will be monitored for changes.
+            if let Err(e) = watcher.watch(
+                STATIC_ARGS.extensions_path.as_path(),
+                RecursiveMode::Recursive,
+            ) {
                 log::error!("{e}");
                 return;
             }
-        };
 
-        // Add a path to be watched. All files and directories at that path and
-        // below will be monitored for changes.
-        if let Err(e) = watcher.watch(
-            STATIC_ARGS.extensions_path.as_path(),
-            RecursiveMode::Recursive,
-        ) {
-            log::error!("{e}");
-            return;
-        }
+            while let Some(event) = rx.next().await {
+                let event = match event {
+                    Ok(event) => event,
+                    Err(e) => {
+                        log::error!("{e}");
+                        continue;
+                    }
+                };
 
-        while let Some(event) = rx.next().await {
-            let event = match event {
-                Ok(event) => event,
-                Err(e) => {
-                    log::error!("{e}");
-                    continue;
-                }
-            };
-
-            log::debug!("{event:?}");
-            match inner.try_borrow_mut() {
-                Ok(state) => match get_extensions() {
+                log::debug!("{event:?}");
+                match get_extensions() {
                     Ok(ext) => {
                         state.write().mutate(Action::RegisterExtensions(ext));
                     }
                     Err(e) => {
                         log::error!("failed to get extensions: {e}");
                     }
-                },
-                Err(e) => {
-                    log::error!("{e}");
                 }
             }
         }
@@ -1166,7 +993,7 @@ fn get_titlebar(cx: Scope) -> Element {
 
     cx.render(rsx!(
         div {
-            class: "titlebar",
+            class: "titlebar disable-select",
             onmousedown: move |_| { desktop.drag(); },
             Release_Info{},
             cx.render(rsx!(span {
