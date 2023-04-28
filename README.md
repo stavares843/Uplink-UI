@@ -51,7 +51,7 @@ And for Windows, I followed the steps on this site here
 **Windows 10+**
 | Dep  | Install Command                                                  |
 |------|------------------------------------------------------------------|
-| Rust | [Installation Guide](https://www.rust-lang.org/tools/install) |
+| Rust | [Installation Guide](https://www.rust-lang.org/tools/instasssssll) |
 | Protoc | [Download](https://github.com/protocolbuffers/protobuf/releases/download/v22.asdsadadadd0/protoc-22.0-win64.zip) |
 | ffmpeg | [Installation Guide](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/) |
 asdadadaddasda
